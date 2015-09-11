@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	goruntime "runtime"
 	"strconv"
 
 	"k8s.io/kubernetes/pkg/api"
@@ -117,6 +118,7 @@ func (s *SchedulerServer) Run(_ []string) error {
 		mux := http.NewServeMux()
 		healthz.InstallHandler(mux)
 		if s.EnableProfiling {
+			goruntime.SetBlockProfileRate(1)
 			mux.HandleFunc("/debug/pprof/", pprof.Index)
 			mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 			mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
