@@ -17,6 +17,8 @@ limitations under the License.
 package cache
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
+	"reflect"
 	"sync"
 )
 
@@ -58,8 +60,24 @@ type FIFO struct {
 }
 
 var (
-	_ = Queue(&FIFO{}) // FIFO is a Queue
+	_           = Queue(&FIFO{}) // FIFO is a Queue
+	ops_counter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "kubernetes_client_cache_fifo_ops_count",
+			Help: "Counter of client.cache.fifo.FIFO operations.  Broken down by operation type and resource",
+		},
+		[]string{"operation_type", "resource"},
+	)
 )
+
+func init() {
+	prometheus.MustRegister(ops_counter)
+}
+
+// https://github.com/kubernetes/kubernetes/blob/647288cde191da006a5136ea78d87e4c1da5bfcf/pkg/storage/etcd/etcd_helper.go#L470-L472
+func getTypeName(obj interface{}) string {
+	return reflect.TypeOf(obj).String()
+}
 
 // Add inserts an item, and puts it in the queue. The item is only enqueued
 // if it doesn't already exist in the set.
@@ -74,6 +92,7 @@ func (f *FIFO) Add(obj interface{}) error {
 		f.queue = append(f.queue, id)
 	}
 	f.items[id] = obj
+	ops_counter.WithLabelValues("add", getTypeName(obj)).Inc()
 	f.cond.Broadcast()
 	return nil
 }
@@ -97,12 +116,14 @@ func (f *FIFO) AddIfNotPresent(obj interface{}) error {
 
 	f.queue = append(f.queue, id)
 	f.items[id] = obj
+	ops_counter.WithLabelValues("add_if_not_present", getTypeName(obj)).Inc()
 	f.cond.Broadcast()
 	return nil
 }
 
 // Update is the same as Add in this implementation.
 func (f *FIFO) Update(obj interface{}) error {
+	ops_counter.WithLabelValues("update", getTypeName(obj)).Inc()
 	return f.Add(obj)
 }
 
@@ -117,6 +138,7 @@ func (f *FIFO) Delete(obj interface{}) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	delete(f.items, id)
+	ops_counter.WithLabelValues("delete", getTypeName(obj)).Inc()
 	return err
 }
 
@@ -128,6 +150,7 @@ func (f *FIFO) List() []interface{} {
 	for _, item := range f.items {
 		list = append(list, item)
 	}
+	ops_counter.WithLabelValues("list", getTypeName(list[0])).Inc()
 	return list
 }
 
@@ -140,6 +163,7 @@ func (f *FIFO) ListKeys() []string {
 	for key := range f.items {
 		list = append(list, key)
 	}
+	ops_counter.WithLabelValues("list_keys", "tbd").Inc()
 	return list
 }
 
@@ -149,6 +173,7 @@ func (f *FIFO) Get(obj interface{}) (item interface{}, exists bool, err error) {
 	if err != nil {
 		return nil, false, KeyError{obj, err}
 	}
+	ops_counter.WithLabelValues("get", getTypeName(obj)).Inc()
 	return f.GetByKey(key)
 }
 
@@ -157,6 +182,7 @@ func (f *FIFO) GetByKey(key string) (item interface{}, exists bool, err error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 	item, exists = f.items[key]
+	ops_counter.WithLabelValues("get_by_key", "tbd").Inc()
 	return item, exists, nil
 }
 
@@ -180,6 +206,7 @@ func (f *FIFO) Pop() interface{} {
 			continue
 		}
 		delete(f.items, id)
+		ops_counter.WithLabelValues("pop", getTypeName(item)).Inc()
 		return item
 	}
 }
@@ -205,6 +232,7 @@ func (f *FIFO) Replace(list []interface{}, resourceVersion string) error {
 	for id := range items {
 		f.queue = append(f.queue, id)
 	}
+	ops_counter.WithLabelValues("replace", "tbd").Inc()
 	if len(f.queue) > 0 {
 		f.cond.Broadcast()
 	}
