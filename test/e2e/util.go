@@ -1392,7 +1392,7 @@ func RunRC(config RCConfig) error {
 		Logf("%v Pods: %d out of %d created, %d running, %d pending, %d waiting, %d inactive, %d terminating, %d unknown, %d runningButNotReady ",
 			rc.Name, len(pods), config.Replicas, running, pending, waiting, inactive, terminating, unknown, runningButNotReady)
 
-		promPushRunningPending(running, pending)
+		promPushRunningPending(running, pending, waiting, inactive, terminating, unknown)
 
 		if config.PodStatusFile != nil {
 			fmt.Fprintf(config.PodStatusFile, "%d, running, %d, pending, %d, waiting, %d, inactive, %d, unknown, %d, runningButNotReady\n", running, pending, waiting, inactive, unknown, runningButNotReady)

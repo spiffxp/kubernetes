@@ -24,33 +24,34 @@ import (
 )
 
 // Prometheus stuff: Setup metrics.
-var runningMetric = prometheus.NewGauge(prometheus.GaugeOpts{
-	Name: "e2e_running",
-	Help: "The num of running pods",
-})
-
-var pendingMetric = prometheus.NewGauge(prometheus.GaugeOpts{
-	Name: "e2e_pending",
-	Help: "The num of pending pods",
-})
+var podGauge = prometheus.NewGaugeVec(
+	prometheus.GaugeOpts{
+		Name: "e2e_density_pod_count",
+		Help: "The number of pods, broken out by state",
+	},
+	[]string{"state"},
+)
 
 // Turn this to true after we register.
 var prom_registered = false
 
 // Reusable function for pushing metrics to prometheus.  Handles initialization and so on.
-func promPushRunningPending(running, pending int) error {
+func promPushRunningPending(running, pending, waiting, inactive, terminating, unknown int) error {
 	if testContext.PrometheusPushGateway == "" {
 		return nil
 	} else {
 		// Register metrics if necessary
 		if !prom_registered && testContext.PrometheusPushGateway != "" {
-			prometheus.Register(runningMetric)
-			prometheus.Register(pendingMetric)
+			prometheus.Register(podGauge)
 			prom_registered = true
 		}
 		// Update metric values
-		runningMetric.Set(float64(running))
-		pendingMetric.Set(float64(pending))
+		podGauge.WithLabelValues("running").Set(float64(running))
+		podGauge.WithLabelValues("pending").Set(float64(pending))
+		podGauge.WithLabelValues("waiting").Set(float64(waiting))
+		podGauge.WithLabelValues("inactive").Set(float64(inactive))
+		podGauge.WithLabelValues("terminating").Set(float64(terminating))
+		podGauge.WithLabelValues("unknown").Set(float64(unknown))
 
 		// Push them to the push gateway.  This will be scraped by prometheus
 		// provided you launch it with the pushgateway as an endpoint.
