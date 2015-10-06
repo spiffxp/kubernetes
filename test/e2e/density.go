@@ -96,8 +96,8 @@ var _ = Describe("Density", func() {
 		// Terminating a namespace (deleting the remaining objects from it - which
 		// generally means events) can affect the current run. Thus we wait for all
 		// terminating namespace to be finally deleted before starting this test.
-		err = checkTestingNSDeletedExcept(c, ns)
-		expectNoError(err)
+		// err = deleteTestingNS(c)
+		// expectNoError(err)
 
 		uuid = string(util.NewUUID())
 
@@ -193,6 +193,8 @@ var _ = Describe("Density", func() {
 				PodStatusFile:        fileHndl,
 				Replicas:             totalPods,
 				MaxContainerFailures: &MaxContainerFailures,
+				CpuLimit:             100,
+				MemLimit:             16 * 1024 * 1024,
 			}
 
 			// Create a listener for events.
