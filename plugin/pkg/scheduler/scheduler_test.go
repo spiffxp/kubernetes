@@ -169,7 +169,7 @@ func TestSchedulerForgetAssumedPodAfterDelete(t *testing.T) {
 	queuedPodStore := cache.NewFIFO(cache.MetaNamespaceKeyFunc)
 	queuedPodLister := &cache.StoreToPodLister{Store: queuedPodStore}
 
-	modeler := NewSimpleModeler(queuedPodLister, scheduledPodLister)
+	modeler := NewSimpleModeler(queuedPodLister, scheduledPodLister, 30*time.Second)
 
 	// Create a fake clock used to timestamp entries and calculate ttl. Nothing
 	// will expire till we flip to something older than the ttl, at which point
@@ -317,7 +317,7 @@ func TestSchedulerRateLimitsBinding(t *testing.T) {
 	scheduledPodLister := &cache.StoreToPodLister{Store: scheduledPodStore}
 	queuedPodStore := cache.NewFIFO(cache.MetaNamespaceKeyFunc)
 	queuedPodLister := &cache.StoreToPodLister{Store: queuedPodStore}
-	modeler := NewSimpleModeler(queuedPodLister, scheduledPodLister)
+	modeler := NewSimpleModeler(queuedPodLister, scheduledPodLister, 30*time.Second)
 
 	algo := NewGenericScheduler(
 		map[string]algorithm.FitPredicate{},

@@ -68,7 +68,7 @@ type ConfigFactory struct {
 }
 
 // Initializes the factory.
-func NewConfigFactory(client *client.Client, rateLimiter util.RateLimiter) *ConfigFactory {
+func NewConfigFactory(client *client.Client, rateLimiter util.RateLimiter, assumedPodsTTL time.Duration) *ConfigFactory {
 	c := &ConfigFactory{
 		Client:             client,
 		PodQueue:           cache.NewFIFO(cache.MetaNamespaceKeyFunc),
@@ -79,7 +79,7 @@ func NewConfigFactory(client *client.Client, rateLimiter util.RateLimiter) *Conf
 		ControllerLister: &cache.StoreToReplicationControllerLister{Store: cache.NewStore(cache.MetaNamespaceKeyFunc)},
 		StopEverything:   make(chan struct{}),
 	}
-	modeler := scheduler.NewSimpleModeler(&cache.StoreToPodLister{Store: c.PodQueue}, c.ScheduledPodLister)
+	modeler := scheduler.NewSimpleModeler(&cache.StoreToPodLister{Store: c.PodQueue}, c.ScheduledPodLister, assumedPodsTTL)
 	c.modeler = modeler
 	c.PodLister = modeler.PodLister()
 	c.BindPodsRateLimiter = rateLimiter

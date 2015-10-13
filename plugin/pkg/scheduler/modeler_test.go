@@ -18,6 +18,7 @@ package scheduler
 
 import (
 	"testing"
+	"time"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
@@ -86,7 +87,7 @@ func TestModeler(t *testing.T) {
 		for _, pod := range item.scheduledPods {
 			s.Store.Add(pod)
 		}
-		m := NewSimpleModeler(q, s)
+		m := NewSimpleModeler(q, s, 30*time.Second)
 		for _, pod := range item.assumedPods {
 			m.AssumePod(pod)
 		}

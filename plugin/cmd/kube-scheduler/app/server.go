@@ -26,6 +26,7 @@ import (
 	"os"
 	goruntime "runtime"
 	"strconv"
+	"time"
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/record"
@@ -59,6 +60,7 @@ type SchedulerServer struct {
 	BindPodsBurst     int
 	KubeApiQps        float32
 	KubeApiBurst      int
+	AssumedPodsTTL    int
 }
 
 // NewSchedulerServer creates a new SchedulerServer with default parameters
@@ -71,6 +73,7 @@ func NewSchedulerServer() *SchedulerServer {
 		BindPodsBurst:     100,
 		KubeApiQps:        50.0,
 		KubeApiBurst:      100,
+		AssumedPodsTTL:    30,
 	}
 	return &s
 }
@@ -88,6 +91,7 @@ func (s *SchedulerServer) AddFlags(fs *pflag.FlagSet) {
 	fs.IntVar(&s.BindPodsBurst, "bind-pods-burst", s.BindPodsBurst, "Number of bindings per second scheduler is allowed to make during bursts")
 	fs.Float32Var(&s.KubeApiQps, "kube-api-qps", s.KubeApiQps, "QPS to use while talking with kubernetes apiserver")
 	fs.IntVar(&s.KubeApiBurst, "kube-api-burst", s.KubeApiBurst, "Burst to use while talking with kubernetes apiserver")
+	fs.IntVar(&s.AssumedPodsTTL, "assumed-pods-ttl", s.AssumedPodsTTL, "TTL (in seconds) to use for the assumed pods store")
 }
 
 // Run runs the specified SchedulerServer.  This should never exit.
@@ -132,7 +136,7 @@ func (s *SchedulerServer) Run(_ []string) error {
 		glog.Fatal(server.ListenAndServe())
 	}()
 
-	configFactory := factory.NewConfigFactory(kubeClient, util.NewTokenBucketRateLimiter(s.BindPodsQPS, s.BindPodsBurst))
+	configFactory := factory.NewConfigFactory(kubeClient, util.NewTokenBucketRateLimiter(s.BindPodsQPS, s.BindPodsBurst), time.Duration(s.AssumedPodsTTL)*time.Second)
 	config, err := s.createConfig(configFactory)
 	if err != nil {
 		glog.Fatalf("Failed to create scheduler configuration: %v", err)

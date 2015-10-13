@@ -100,12 +100,13 @@ type SimpleModeler struct {
 // NewSimpleModeler returns a new SimpleModeler.
 //   queuedPods: a PodLister that will return pods that have not been scheduled yet.
 //   scheduledPods: a PodLister that will return pods that we know for sure have been scheduled.
-func NewSimpleModeler(queuedPods, scheduledPods ExtendedPodLister) *SimpleModeler {
+//	 ttl: a time.Duration for the assumedPods TTLStore-backed StoreToPodLister
+func NewSimpleModeler(queuedPods ExtendedPodLister, scheduledPods ExtendedPodLister, ttl time.Duration) *SimpleModeler {
 	return &SimpleModeler{
 		queuedPods:    queuedPods,
 		scheduledPods: scheduledPods,
 		assumedPods: &cache.StoreToPodLister{
-			Store: cache.NewTTLStore(cache.MetaNamespaceKeyFunc, 30*time.Second),
+			Store: cache.NewTTLStore(cache.MetaNamespaceKeyFunc, ttl),
 		},
 	}
 }
