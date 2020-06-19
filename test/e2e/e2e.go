@@ -227,6 +227,9 @@ func waitForDaemonSets(c clientset.Interface, ns string, allowedNotReadyNodes in
 func setupSuite() {
 	// Run only on Ginkgo node 1
 
+	// TODO(spiffxp): remove this
+	klog.Infof("setupSuite being called: only on node 1")
+
 	switch framework.TestContext.Provider {
 	case "gce", "gke":
 		logClusterImageSources()
@@ -418,6 +421,10 @@ func lookupClusterImageSources() (string, string, error) {
 // Because of the way Ginkgo runs tests in parallel, we must use SynchronizedBeforeSuite
 // Ref: https://onsi.github.io/ginkgo/#parallel-specs
 func setupSuitePerGinkgoNode() {
+
+	// TODO(spiffxp): remove this
+	klog.Infof("setupSuitePerGinkgoNode being called on node %d", config.GinkgoConfig.ParallelNode)
+
 	// Obtain the default IP family of the cluster
 	// Some e2e test are designed to work on IPv4 only, this global variable
 	// allows to adapt those tests to work on both IPv4 and IPv6

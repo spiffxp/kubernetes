@@ -179,6 +179,17 @@ func NewFramework(baseName string, options Options, client clientset.Interface) 
 
 // BeforeEach gets a client and makes a namespace.
 func (f *Framework) BeforeEach() {
+	currentTest := ginkgo.CurrentGinkgoTestDescription()
+	Logf("framework.BeforeEach: %s:%d full: %s, test: %s", currentTest.FileName, currentTest.LineNumber, currentTest.FullTestText, currentTest.TestText)
+	if TestContext.Conformance.Enabled {
+		if metadata, ok := TestContext.Conformance.MetadataByFullTestText[currentTest.FullTestText]; ok {
+			if len(metadata.Behaviors) == 0 {
+				msg := fmt.Sprintf("Skipping %s because it has no behaviors associated with it", currentTest.FullTestText)
+				ginkgo.Skip(msg)
+			}
+		}
+	}
+
 	f.beforeEachStarted = true
 
 	// The fact that we need this feels like a bug in ginkgo.

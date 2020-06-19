@@ -128,6 +128,24 @@ func TestMain(m *testing.M) {
 
 	framework.AfterReadingAllFlags(&framework.TestContext)
 
+	// TODO(spiffxp): where to put this
+	if framework.TestContext.Conformance.Enabled {
+		var tests []framework.ConformanceMetadata
+		data, err := testfiles.Read("test/conformance/testdata/conformance.yaml")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		if err := yaml.Unmarshal(data, &tests); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		framework.TestContext.Conformance.MetadataByFullTestText = map[string]framework.ConformanceMetadata{}
+		for _, test := range tests {
+			framework.TestContext.Conformance.MetadataByFullTestText[test.Codename] = test
+		}
+	}
+
 	// TODO: Deprecating repo-root over time... instead just use gobindata_util.go , see #23987.
 	// Right now it is still needed, for example by
 	// test/e2e/framework/ingress/ingress_utils.go

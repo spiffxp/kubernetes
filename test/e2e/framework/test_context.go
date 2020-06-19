@@ -176,6 +176,25 @@ type TestContextType struct {
 
 	// DockerConfigFile is a file that contains credentials which can be used to pull images from certain private registries, needed for a test.
 	DockerConfigFile string
+
+	Conformance ConformanceConfig
+}
+
+// A flag to say whether we're going to look at metadata before each test,
+// and a map of test name to metdata
+type ConformanceConfig struct {
+	Enabled                bool
+	MetadataByFullTestText map[string]ConformanceMetadata
+}
+
+// Copy paste from test/conformance/behaviors or something
+type ConformanceMetadata struct {
+	Testname    string   `yaml:"testname"`
+	Codename    string   `yaml:"codename"`
+	Description string   `yaml:"description"`
+	Release     string   `yaml:"release"`
+	File        string   `yaml:"file"`
+	Behaviors   []string `yaml:"behaviors,omitempty"`
 }
 
 // NodeKillerConfig describes configuration of NodeKiller -- a utility to
@@ -306,6 +325,9 @@ func RegisterCommonFlags(flags *flag.FlagSet) {
 	flags.StringVar(&TestContext.ProgressReportURL, "progress-report-url", "", "The URL to POST progress updates to as the suite runs to assist in aiding integrations. If empty, no messages sent.")
 	flags.StringVar(&TestContext.SpecSummaryOutput, "spec-dump", "", "The file to dump all ginkgo.SpecSummary to after tests run. If empty, no objects are saved/printed.")
 	flags.StringVar(&TestContext.DockerConfigFile, "docker-config-file", "", "A file that contains credentials which can be used to pull images from certain private registries, needed for a test.")
+
+	// I can't call this flag "conformance" because node-e2e apparently uses that for nodeconformance
+	flags.BoolVar(&TestContext.Conformance.Enabled, "conformance-mode", false, "whether to try running in an experimental mode for conformance")
 }
 
 // RegisterClusterFlags registers flags specific to the cluster e2e test suite.
