@@ -43,7 +43,7 @@ BINDATA_OUTPUT="test/e2e/generated/bindata.go"
 # IMPORTANT: if you make any changes to these arguments, you must also update
 # test/e2e/generated/BUILD and/or build/bindata.bzl.
 go-bindata -nometadata -o "${BINDATA_OUTPUT}.tmp" -pkg generated \
-	-ignore .jpg -ignore .png -ignore .md -ignore 'BUILD(\.bazel)?' \
+	-ignore .go -ignore .jpg -ignore .png -ignore .md -ignore 'BUILD(\.bazel)?' \
 	"test/conformance/testdata/..." \
 	"test/e2e/testing-manifests/..." \
 	"test/e2e_node/testing-manifests/..." \
