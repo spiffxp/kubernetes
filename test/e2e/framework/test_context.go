@@ -195,6 +195,7 @@ type ConformanceMetadata struct {
 	Release     string   `yaml:"release"`
 	File        string   `yaml:"file"`
 	Behaviors   []string `yaml:"behaviors,omitempty"`
+	Profiles    []string `yaml:"profiles,omitempty"`
 }
 
 // NodeKillerConfig describes configuration of NodeKiller -- a utility to
